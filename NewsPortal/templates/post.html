@@ -1,52 +1,64 @@
-<!--  наследуемся от шаблона default.html, который мы создавали для flatpages -->
 {% extends 'flatpages/default.html' %}
 
 {% load custom_filters %}
-
 {% load custom_tags %}
 
-<!-- Название у нас будет products -->
 {% block title %}
-Post
+    Post
 {% endblock title %}
 
-<!-- В контенте на странице мы выводим все товары -->
 {% block content %}
-   <h1>Лента</h1>
-<h3>Количество новостей: {{post|length}}</h3>
-   <!-- Используем переданную из представления переменную time_now
-   и применяем к ней фильтр date. По назначению этот фильтр очень похож
-   на метод strftime у объекта datetime в Python — вывод времени
-   в указанном формате. -->
-   <h3>{% current_time '%b %d %Y' %}</h3>
-   <!-- Если в переменной next_sale будет None,
-   то выведется указанный в фильтре текст -->
+    <h1>Поиск</h1>
+
+    <form action="" method="get">
+        {{ filterset.form.as_p }}
+        <input type="submit" value="Найти" />
+    </form>
+
+    <h3>Количество новостей: {{post|length}}</h3>
+    <h3>{% current_time '%b %d %Y' %}</h3>
     <h3> {{ next_sale|default_if_none:"Только лучшие новости для вас!" }}</h3>
-   <hr>
-   {% if post %}
-       <table> <!-- Начинаем описывать таблицу -->
-           <tr> <!-- Добавляем строку -->
-               <td>Дата публикации</td> <!-- Добавляем ячейку в строку -->
-               <td>Заголовок</td><!-- Добавляем ещё одну ячейку в строку и так далее -->
-               <td>Начало</td>
-           </tr> <!-- Не забываем закрыть HTML-тег строки -->
-           <!-- Для каждого товара будете генерироваться новая строчка,
-           т.е. новый HTML код, который указан в теле цикла.
-           При этом сам цикл работает точно так же, как и в Python.
-           product — переменная цикла, т.е. наш товар полученный из списка -->
-           {% for posts in post %}
-           <tr>
-               <!-- Не забываем, что переменные в шаблоне ничем не отличаются
-                от переменных в Python. Здесь также можно получать доступ к
-                полям объекта модели. Например, здесь мы выводим имя,
-                в следующем столбце описание, и т.д.  -->
-               <td>{{ posts.time_creation }}</td>
-               <td>{{ posts.title|censor }}</td>
-               <td>{{ posts.text|censor|truncatechars:20 }}</td>
-           </tr>
-           {% endfor %}
-       </table>
-   {% else %}
-       <h2>Скоро здесь что-то будет!</h2>
-   {% endif %}
+    <hr>
+    {% if post %}
+        <table>
+            <tr>
+                <td>Дата публикации</td>
+                <td>Заголовок</td>
+                <td>Начало</td>
+                <td>Действия</td>  <!-- Добавили столбец для действий -->
+            </tr>
+            {% for posts in post %}
+                <tr>
+                    <td>{{ posts.time_creation }}</td>
+                    <td>{{ posts.title|censor }}</td>
+                    <td>{{ posts.text|censor|truncatechars:20 }}</td>
+                    <td>  <!-- Вставляем кнопку "Удалить" в новый столбец -->
+                        <a href="{% url 'post_delete' pk=posts.pk %}">Удалить</a>
+                        <a href="{% url 'post_update' pk=posts.pk %}">Редактировать</a> <!-- добавьте кнопку редактирования-->
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <h2>Скоро здесь что-то будет!</h2>
+    {% endif %}
+
+    {% if page_obj.has_previous %}
+        <a href="?{% url_replace page=1 %}">1</a>
+        {% if page_obj.previous_page_number != 1 %}
+            ...
+            <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+        {% endif %}
+    {% endif %}
+
+    {{ page_obj.number }}
+
+    {% if page_obj.has_next %}
+        <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+        {% if paginator.num_pages != page_obj.next_page_number %}
+            ...
+            <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+        {% endif %}
+    {% endif %}
+
 {% endblock content %}

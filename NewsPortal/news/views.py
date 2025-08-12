@@ -1,38 +1,59 @@
-from django.views.generic import ListView, DetailView
-from .models import Post
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from .models import Post, Category, Author, PostCategory
+from .filters import PostFilter
+from .forms import PostForm
+from django.urls import reverse_lazy
+
 from datetime import datetime
+from django.shortcuts import render
 
 class PostList(ListView):
-    # Указываем модель, объекты которой мы будем выводить
     model = Post
-    # Поле, которое будет использоваться для сортировки объектов
     user = 'name'
-    # Указываем имя шаблона, в котором будут все инструкции о том,
-    # как именно пользователю должны быть показаны наши объекты
-    template_name = 'post.html'
-    # Это имя списка, в котором будут лежать все объекты.
-    # Его надо указать, чтобы обратиться к списку объектов в html-шаблоне.
-    context_object_name = 'post'
-    # Новости выводиться в порядке от более свежей к старой.
-    queryset = Post.objects.order_by('-time_creation')
 
-    # Метод get_context_data позволяет нам изменить набор данных,
-    # который будет передан в шаблон.
+    template_name = 'post.html'
+
+    context_object_name = 'post'
+    queryset = Post.objects.order_by('-time_creation')
+    paginate_by = 10 # вот так мы можем указать количество записей на странице
+
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        self.filterset = PostFilter(self.request.GET, queryset)
+        return self.filterset.qs
     def get_context_data(self, **kwargs):
-        # С помощью super() мы обращаемся к родительским классам
-        # и вызываем у них метод get_context_data с теми же аргументами,
-        # что и были переданы нам.
-        # В ответе мы должны получить словарь.
         context = super().get_context_data(**kwargs)
-        # Добавим ещё одну пустую переменную,
-        # чтобы на её примере рассмотреть работу ещё одного фильтра.
-        context['next_sale'] = None
+        context['filterset'] = self.filterset
         return context
 
 class PostDetail(DetailView):
-    # Модель всё та же, но мы хотим получать информацию по отдельному товару
+    template_name = 'posts_detail'
+    queryset = Post.objects.all()
+
+class PostCreate(CreateView):
+    template_name = 'post_edit.html'
+    form_class = PostForm
+    success_url = reverse_lazy('post_list')
+
+class PostUpdate(UpdateView):
+    form_class = PostForm
     model = Post
-    # Используем другой шаблон — product.html
-    template_name = 'posts.html'
-    # Название объекта, в котором будет выбранный пользователем продукт
-    context_object_name = 'posts'
+    template_name = 'post_edit.html'
+    success_url = reverse_lazy('post_list')
+
+class PostDelete(DeleteView):
+    model = Post
+    template_name = 'post_delete.html'
+    success_url = reverse_lazy('post_list')
+
+class PostSearch(ListView):
+    model = Post
+    template_name = 'post_search.html'
+    context_object_name = 'news'
+    ordering = ['-time_creation']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = PostFilter(self.request.GET, queryset=self.get_queryset())
+        return context
