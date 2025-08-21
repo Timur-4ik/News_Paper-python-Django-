@@ -30,17 +30,39 @@ class PostList(ListView):
 class PostDetail(DetailView):
     template_name = 'posts_detail'
     queryset = Post.objects.all()
+    success_url = reverse_lazy('post_list')
 
 class PostCreate(CreateView):
     template_name = 'post_edit.html'
     form_class = PostForm
     success_url = reverse_lazy('post_list')
 
+class NewsCreateView(PostCreate):
+    def form_valid(self, form):
+        form.instance.category_type = 'NW'
+        return super().form_valid(form)
+
+
+class ArticleCreateView(PostCreate):
+    def form_valid(self, form):
+        form.instance.category_type = 'AR'
+        return super().form_valid(form)
+
 class PostUpdate(UpdateView):
     form_class = PostForm
     model = Post
     template_name = 'post_edit.html'
     success_url = reverse_lazy('post_list')
+
+class NewsUpdateView(PostUpdate):
+    def form_valid(self, form):
+        form.instance.category_type = 'NW'
+        return super().form_valid(form)
+
+class ArticleUpdateView(PostUpdate):
+    def form_valid(self, form):
+        form.instance.category_type = 'AR'
+        return super().form_valid(form)
 
 class PostDelete(DeleteView):
     model = Post
@@ -52,6 +74,9 @@ class PostSearch(ListView):
     template_name = 'post_search.html'
     context_object_name = 'news'
     ordering = ['-time_creation']
+    success_url = reverse_lazy('post_list')
+
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

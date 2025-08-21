@@ -1,5 +1,6 @@
 {% extends 'flatpages/default.html' %}
 
+
 {% load custom_filters %}
 
 {% block title %}
@@ -10,11 +11,16 @@
     <br>
 
     {% if filter.qs %}  <!-- Исправлено: проверяем, есть ли статьи в filter.qs -->
-
+        <h1>Поиск</h1>
+        <br>
         <form method="GET">
-            {{ filter.form }}
+            {{ filter.form.as_p }}
+                    <br>
             <input type="submit" value="Найти">
+                    <br>
         </form>
+        <br>
+
 
         <br>
 

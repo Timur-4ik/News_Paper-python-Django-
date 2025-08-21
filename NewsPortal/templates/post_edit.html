@@ -1,24 +1,10 @@
-{% extends 'flatpages/default.html' %}
-
-{% load custom_filters %}
-
-{% block title %}
-    {% if post %}  <!-- Проверяем, существует ли объект post -->
-        Редактирование статьи
-    {% else %}
-        Создание статьи
-    {% endif %}
-{% endblock title %}
+{% extends "flatpages/default.html" %}
 
 {% block content %}
-    <br>
-    <h4>Заполните все поля для {% if post %}редактирования{% else %}создания{% endif %} статьи</h4>
-    <br>
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ form }}
-        <input type="submit" value="{% if post %}Сохранить изменения{% else %}Добавить статью{% endif %}">  <!-- Меняем надпись на кнопке -->
-    </form>
-    <br>
-    <a href="{% url 'post_list' %}"><--Вернуться к новостям</a>
-{% endblock content %}
+<h2>{{ view.object.pk|yesno:"Редактировать,Создать" }}</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Сохранить</button>
+</form>
+{% endblock %}
